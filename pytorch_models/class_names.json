@@ -1,0 +1,20 @@
+{
+  "class_names": [
+    "Limonati Citrus 0.33ml",
+    "Mountain Dew 450ml",
+    "Pepsi Zero 250ml",
+    "Rootz MangoMarakuya 450ml",
+    "Rootz QulunpayMalina 450ml",
+    "Rootz UzumLaym 450ml"
+  ],
+  "product_to_label": {
+    "Limonati Citrus 0.33ml": 0,
+    "Mountain Dew 450ml": 1,
+    "Pepsi Zero 250ml": 2,
+    "Rootz MangoMarakuya 450ml": 3,
+    "Rootz QulunpayMalina 450ml": 4,
+    "Rootz UzumLaym 450ml": 5
+  },
+  "architecture": "ResNet18",
+  "confidence_threshold": 40.0
+}

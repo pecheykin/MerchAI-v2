@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MerchAi v2.1 - Анализ полок</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --panel: #101628;
+      --panel2: #0f1425;
+      --text: #e7eefc;
+      --muted: #9bb0d1;
+      --accent: #1e90ff;
+      --success: #00d4aa;
+      --error: #ff4757;
+      --shelf: #ff6b35;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Inter, Arial, sans-serif;
+      padding: 20px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #1e90ff, #00d4ff);
+      display: grid;
+      place-items: center;
+      color: #001221;
+      font-weight: 800;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .version {
+      background: var(--accent);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .version.shelf {
+      background: var(--shelf);
+    }
+
+    .grid {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: 1fr;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    .card.shelf-card {
+      border-left: 4px solid var(--shelf);
+    }
+
+    .card h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn {
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      background: #0066cc;
+    }
+
+    .btn.secondary {
+      background: #23314f;
+    }
+
+    .btn.shelf {
+      background: var(--shelf);
+    }
+
+    .btn.shelf:hover {
+      background: #e55a2b;
+    }
+
+    .counter {
+      margin-left: auto;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .field {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, .14);
+      background: var(--panel2);
+      color: #fff;
+      margin: 10px 0;
+    }
+
+    .field-small {
+      width: 80px;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, .14);
+      background: var(--panel2);
+      color: #fff;
+      margin: 0 5px;
+    }
+
+    .drop {
+      margin-top: 12px;
+      border: 1px dashed rgba(255, 255, 255, .18);
+      border-radius: 12px;
+      min-height: 160px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      padding: 12px;
+      text-align: center;
+    }
+
+    .drop.shelf-drop {
+      border-color: rgba(255, 107, 53, .4);
+      background: rgba(255, 107, 53, .05);
+    }
+
+    .files {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .thumb {
+      position: relative;
+      background: var(--panel2);
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      aspect-ratio: 1;
+    }
+
+    .thumb img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .x {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(0, 0, 0, .7);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* modal preview */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+
+    .modal img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .6);
+    }
+
+    .modal .close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, .8);
+      border: 0;
+      color: #fff;
+      font-size: 24px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 16px;
+      margin: 10px 0;
+      flex-wrap: wrap;
+    }
+
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+    }
+
+    .radio-option input[type="radio"] {
+      accent-color: var(--accent);
+    }
+
+    /* Результаты анализа полки */
+    .shelf-results {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(255, 107, 53, .1);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 107, 53, .3);
+      display: none;
+    }
+
+    .shelf-results.show {
+      display: block;
+    }
+
+    .product-stats {
+      display: grid;
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .product-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, .05);
+      border-radius: 6px;
+    }
+
+    .recommendations {
+      margin-top: 15px;
+      padding: 12px;
+      background: rgba(0, 212, 170, .1);
+      border-radius: 8px;
+      border-left: 4px solid var(--success);
+    }
+
+    @media (min-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .grid {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="logo">M</div>
+    <h1>MerchAi v2.1</h1>
+    <div class="version">ML</div>
+    <div class="version shelf">SHELF</div>
+  </header>
+
+  <main class="grid">
+    <!-- TRAINING -->
+    <section class="card" id="train-card">
+      <h2>🎯 Обучение модели</h2>
+      <p class="muted">Добавьте изображения товара (от 1 до 20). Файлы отправляются на сервер для обучения ML модели.
+      </p>
+
+      <div class="radio-group">
+        <div class="radio-option">
+          <input type="radio" id="addToExisting" name="productMode" value="existing">
+          <label for="addToExisting">Добавить к существующему</label>
+        </div>
+        <div class="radio-option">
+          <input type="radio" id="createNew" name="productMode" value="new" checked>
+          <label for="createNew">Создать новый товар</label>
+        </div>
+      </div>
+
+      <div id="existingProductSection" style="display: none;">
+        <label class="muted" for="existingProduct">Выберите товар</label>
+        <select id="existingProduct" class="field">
+          <option value="">Загрузка...</option>
+        </select>
+      </div>
+
+      <div id="newProductSection">
+        <label class="muted" for="productName">Наименование товара</label>
+        <input id="productName" class="field" placeholder="Например: Pepsi 0.33" />
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <label class="btn" for="trainFiles">Выбрать файлы</label>
+        <button class="btn secondary" id="trainClear">Очистить</button>
+        <span class="counter" id="trainCount">0/20</span>
+        <input id="trainFiles" type="file" multiple accept="image/*" />
+      </div>
+
+      <div id="trainDrop" class="drop">или перетащите сюда</div>
+      <div id="trainPreview" class="files"></div>
+
+      <button class="btn" id="trainModel" style="margin-top:16px;width:100%">Обучить модель</button>
+    </section>
+
+    <!-- SEARCH -->
+    <section class="card" id="search-card">
+      <h2>🔍 ML Поиск по фотографии</h2>
+      <p class="muted">Загрузите <b>1</b> фото для ML анализа. Название опционально!</p>
+
+      <label class="muted" for="query">Название товара (необязательно)</label>
+      <input id="query" class="field" placeholder="Можно оставить пустым для честного ML теста" />
+
+      <div class="row" style="margin-top:10px">
+        <label class="btn" for="searchFile">Выбрать фото</label>
+        <button class="btn secondary" id="searchClear">Удалить фото</button>
+        <span class="counter" id="searchCount">0/1</span>
+        <input id="searchFile" type="file" accept="image/*" />
+      </div>
+
+      <div id="searchDrop" class="drop">или перетащите сюда</div>
+      <div id="searchPreview" class="files"></div>
+
+      <button class="btn" id="findProduct" style="margin-top:16px;width:100%">ML Анализ фото</button>
+    </section>
+
+    <!-- SHELF ANALYSIS -->
+    <section class="card shelf-card" id="shelf-card">
+      <h2>🛒 Статистика полки магазина</h2>
+      <p class="muted">Загрузите фото полки - покажем процентное соотношение товаров!</p>
+
+      <div class="row" style="margin-top:10px">
+        <label class="btn shelf" for="shelfFile">Выбрать фото полки</label>
+        <button class="btn secondary" id="shelfClear">Удалить фото</button>
+        <span class="counter" id="shelfCount">0/1</span>
+        <input id="shelfFile" type="file" accept="image/*" />
+      </div>
+
+      <div id="shelfDrop" class="drop shelf-drop">📸 Перетащите фото полки сюда</div>
+      <div id="shelfPreview" class="files"></div>
+
+      <button class="btn shelf" id="analyzeShelf" style="margin-top:16px;width:100%">📊 Показать статистику
+        полки</button>
+
+      <!-- Результаты анализа -->
+      <div id="shelfResults" class="shelf-results">
+        <h3>📊 Статистика полки</h3>
+        <div id="shelfStats" class="product-stats"></div>
+        <div id="shelfRecommendations" class="recommendations"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal preview -->
+  <div class="modal" id="modal">
+    <button class="close" id="modalClose">×</button>
+    <img alt="preview" id="modalImg" />
+  </div>
+
+  <script>
+    // helpers
+    const byId = id => document.getElementById(id);
+    function makeThumb(src, onRemove) {
+      const div = document.createElement('div');
+      div.className = 'thumb';
+      const img = document.createElement('img');
+      img.src = src; div.appendChild(img);
+      const x = document.createElement('button'); x.className = 'x'; x.textContent = '×';
+      x.onclick = e => { e.stopPropagation(); onRemove(); div.remove(); };
+      div.appendChild(x);
+      div.onclick = () => openModal(src);
+      return div;
+    }
+
+    // modal
+    const modal = byId('modal');
+    const modalImg = byId('modalImg');
+    byId('modalClose').onclick = () => modal.style.display = 'none';
+    function openModal(src) { modalImg.src = src; modal.style.display = 'flex'; }
+
+    // PRODUCT MODE SWITCHING
+    const addToExistingRadio = byId('addToExisting');
+    const createNewRadio = byId('createNew');
+    const existingProductSection = byId('existingProductSection');
+    const newProductSection = byId('newProductSection');
+    const existingProductSelect = byId('existingProduct');
+
+    function toggleProductMode() {
+      if (addToExistingRadio.checked) {
+        existingProductSection.style.display = 'block';
+        newProductSection.style.display = 'none';
+      } else {
+        existingProductSection.style.display = 'none';
+        newProductSection.style.display = 'block';
+      }
+    }
+
+    addToExistingRadio.onchange = toggleProductMode;
+    createNewRadio.onchange = toggleProductMode;
+
+    // LOAD EXISTING PRODUCTS
+    async function loadExistingProducts() {
+      try {
+        const response = await fetch('/products/list');
+        const data = await response.json();
+
+        existingProductSelect.innerHTML = '<option value="">Выберите товар...</option>';
+        data.products.forEach(product => {
+          const option = document.createElement('option');
+          option.value = product.id;
+          option.textContent = product.name;
+          existingProductSelect.appendChild(option);
+        });
+      } catch (error) {
+        existingProductSelect.innerHTML = '<option value="">Ошибка загрузки</option>';
+      }
+    }
+
+    // TRAIN
+    const train = { files: [] };
+    const trainFiles = byId('trainFiles');
+    const trainPreview = byId('trainPreview');
+    const trainCount = byId('trainCount');
+    const trainDrop = byId('trainDrop');
+    byId('trainClear').onclick = () => { train.files = []; trainPreview.innerHTML = ''; trainCount.textContent = '0/20'; };
+
+    function addTrainFiles(list) {
+      const add = Array.from(list).slice(0, 20 - train.files.length);
+      add.forEach(file => {
+        train.files.push(file);
+        const r = new FileReader();
+        r.onload = e => trainPreview.appendChild(makeThumb(e.target.result, () => {
+          train.files = train.files.filter(f => f !== file);
+          updateTrainCount();
+        }));
+        r.readAsDataURL(file);
+      });
+      updateTrainCount();
+    }
+    function updateTrainCount() { trainCount.textContent = `${train.files.length}/20`; }
+
+    trainFiles.onchange = e => addTrainFiles(e.target.files);
+    ;['dragover', 'drop'].forEach(ev => trainDrop.addEventListener(ev, e => {
+      e.preventDefault();
+      if (ev === 'drop') addTrainFiles(e.dataTransfer.files);
+    }));
+
+    // Обучение модели - отправка на API
+    byId('trainModel').onclick = async () => {
+      let productName = '';
+      let existingProductId = null;
+
+      if (addToExistingRadio.checked) {
+        existingProductId = existingProductSelect.value;
+        if (!existingProductId) {
+          alert('Выберите существующий товар!');
+          return;
+        }
+        productName = existingProductSelect.options[existingProductSelect.selectedIndex].text;
+      } else {
+        productName = byId('productName').value;
+        if (!productName) {
+          alert('Введите название товара!');
+          return;
+        }
+      }
+
+      if (train.files.length === 0) {
+        alert('Добавьте фото!');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('product_name', productName);
+      if (existingProductId) {
+        formData.append('existing_product_id', existingProductId);
+      }
+      train.files.forEach(file => formData.append('files', file));
+
+      try {
+        const response = await fetch('/train/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const result = await response.json();
+        alert(`✅ ${result.message}\n🧠 ML: Обработано ${result.ml_training?.processed || 0} изображений`);
+        // Очистка формы
+        // byId('productName').value = '';
+        train.files = [];
+        trainPreview.innerHTML = '';
+        updateTrainCount();
+        loadExistingProducts(); // Обновляем список товаров
+      } catch (error) {
+        alert('❌ Ошибка: ' + error.message);
+      }
+    };
+
+    // SEARCH
+    const search = { file: null };
+    const searchFile = byId('searchFile');
+    const searchPreview = byId('searchPreview');
+    const searchCount = byId('searchCount');
+    const searchDrop = byId('searchDrop');
+    byId('searchClear').onclick = () => { search.file = null; searchPreview.innerHTML = ''; searchCount.textContent = '0/1'; };
+
+    function setSearchFile(file) {
+      search.file = file; searchPreview.innerHTML = '';
+      const r = new FileReader();
+      r.onload = e => searchPreview.appendChild(makeThumb(e.target.result, () => {
+        search.file = null; searchPreview.innerHTML = ''; updateSearchCount();
+      }));
+      r.readAsDataURL(file);
+      updateSearchCount();
+    }
+    function updateSearchCount() { searchCount.textContent = search.file ? '1/1' : '0/1'; }
+
+    searchFile.onchange = e => { if (e.target.files[0]) setSearchFile(e.target.files[0]); };
+    ;['dragover', 'drop'].forEach(ev => searchDrop.addEventListener(ev, e => {
+      e.preventDefault();
+      if (ev === 'drop' && e.dataTransfer.files[0]) setSearchFile(e.dataTransfer.files[0]);
+    }));
+
+    // ML ПОИСК - УБРАНА ПРОВЕРКА НАЗВАНИЯ!
+    byId('findProduct').onclick = async () => {
+      const query = byId('query').value || "ml_test";
+      if (!search.file) { // ПРОВЕРЯЕМ ТОЛЬКО ФОТО!
+        alert('Добавьте фото для ML анализа!');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('query', query);
+      formData.append('file', search.file);
+
+      try {
+        const response = await fetch('/search/predict', {
+          method: 'POST',
+          body: formData
+        });
+        const result = await response.json();
+
+        let resultText = '🧠 ML РЕЗУЛЬТАТ:\n\n';
+        if (result.results && result.results.length > 0) {
+          result.results.forEach((r, i) => {
+            resultText += `${i + 1}. ${r.product}: ${Math.round(r.confidence)}%\n`;
+          });
+        } else {
+          resultText += 'Не найдено похожих товаров';
+        }
+
+        alert(resultText);
+      } catch (error) {
+        alert('❌ ML Ошибка: ' + error.message);
+      }
+    };
+
+    // NEW: SHELF ANALYSIS
+    const shelf = { file: null };
+    const shelfFile = byId('shelfFile');
+    const shelfPreview = byId('shelfPreview');
+    const shelfCount = byId('shelfCount');
+    const shelfDrop = byId('shelfDrop');
+    const shelfResults = byId('shelfResults');
+    const shelfStats = byId('shelfStats');
+    const shelfRecommendations = byId('shelfRecommendations');
+
+    byId('shelfClear').onclick = () => {
+      shelf.file = null;
+      shelfPreview.innerHTML = '';
+      shelfCount.textContent = '0/1';
+      shelfResults.classList.remove('show');
+    };
+
+    function setShelfFile(file) {
+      shelf.file = file;
+      shelfPreview.innerHTML = '';
+      const r = new FileReader();
+      r.onload = e => shelfPreview.appendChild(makeThumb(e.target.result, () => {
+        shelf.file = null;
+        shelfPreview.innerHTML = '';
+        updateShelfCount();
+        shelfResults.classList.remove('show');
+      }));
+      r.readAsDataURL(file);
+      updateShelfCount();
+    }
+
+    function updateShelfCount() { shelfCount.textContent = shelf.file ? '1/1' : '0/1'; }
+
+    shelfFile.onchange = e => { if (e.target.files[0]) setShelfFile(e.target.files[0]); };
+    ;['dragover', 'drop'].forEach(ev => shelfDrop.addEventListener(ev, e => {
+      e.preventDefault();
+      if (ev === 'drop' && e.dataTransfer.files[0]) setShelfFile(e.dataTransfer.files[0]);
+    }));
+
+    // АНАЛИЗ ПОЛКИ (УПРОЩЕННЫЙ)
+    byId('analyzeShelf').onclick = async () => {
+      if (!shelf.file) {
+        alert('Добавьте фото полки для анализа!');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', shelf.file);
+
+      try {
+        byId('analyzeShelf').textContent = '🤖 Анализируем...';
+        byId('analyzeShelf').disabled = true;
+
+        const response = await fetch('/shelf/analyze', {
+          method: 'POST',
+          body: formData
+        });
+        const result = await response.json();
+
+        if (result.status === 'success') {
+          displaySimpleResults(result);
+        } else {
+          alert('❌ Ошибка: ' + result.message);
+        }
+
+      } catch (error) {
+        alert('❌ Ошибка: ' + error.message);
+      } finally {
+        byId('analyzeShelf').textContent = '📊 Показать статистику полки';
+        byId('analyzeShelf').disabled = false;
+      }
+    };
+
+    function displaySimpleResults(result) {
+      // Показываем результаты
+      shelfResults.classList.add('show');
+
+      // Основная статистика
+      shelfStats.innerHTML = `
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h3 style="color: #4ecdc4;">📊 ${result.message}</h3>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;">
+          <div style="text-align: center; padding: 15px; background: rgba(30, 144, 255, 0.1); border-radius: 8px;">
+            <strong style="font-size: 20px; color: #1e90ff;">${result.total_objects}</strong><br>
+            <small>Объектов найдено</small>
+          </div>
+          <div style="text-align: center; padding: 15px; background: rgba(0, 212, 170, 0.1); border-radius: 8px;">
+            <strong style="font-size: 20px; color: #00d4aa;">${result.total_recognized}</strong><br>
+            <small>Товаров распознано</small>
+          </div>
+          <div style="text-align: center; padding: 15px; background: rgba(255, 107, 53, 0.1); border-radius: 8px;">
+            <strong style="font-size: 20px; color: #ff6b35;">${result.recognition_rate}%</strong><br>
+            <small>Точность распознавания</small>
+          </div>
+        </div>
+      `;
+
+      // Процентное соотношение товаров
+      shelfRecommendations.innerHTML = '<h3 style="color: #4ecdc4;">🛒 Состав полки:</h3>';
+
+      if (result.products && result.products.length > 0) {
+        result.products.forEach(product => {
+          const productDiv = document.createElement('div');
+          productDiv.style.cssText = `
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            margin-bottom: 12px; 
+            padding: 15px; 
+            background: rgba(76, 205, 196, 0.1); 
+            border-radius: 8px;
+            border-left: 4px solid #4ecdc4;
+          `;
+
+          // Полоса процентов
+          const progressBar = `
+            <div style="width: 100px; height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; margin-left: 10px; position: relative;">
+              <div style="width: ${product.percentage}%; height: 100%; background: #4ecdc4; border-radius: 4px;"></div>
+            </div>
+          `;
+
+          productDiv.innerHTML = `
+            <div style="display: flex; align-items: center; flex: 1;">
+              <strong style="color: #e7eefc;">${product.name}</strong>
+              <span style="margin-left: 15px; color: #9bb0d1;">${product.count} шт</span>
+              ${progressBar}
+            </div>
+            <strong style="color: #4ecdc4; font-size: 18px;">${product.percentage}%</strong>
+          `;
+          shelfRecommendations.appendChild(productDiv);
+        });
+      } else {
+        shelfRecommendations.innerHTML += '<p style="color: #9bb0d1;">Товары не распознаны или недостаточно уверенности в классификации</p>';
+      }
+    }
+
+    // INITIALIZE
+    window.onload = () => {
+      loadExistingProducts();
+      toggleProductMode();
+    };
+  </script>
+</body>
+
+</html>
