@@ -1,7 +1,11 @@
-uploads/*
+pytorch_models/
+uploads/
+backend/
 *.db
 *.sqlite3
-pytorch_models/*.pth
 __pycache__/
 .DS_Store
-temp_shelf_analysis/*
+temp_shelf_analysis/
+*.log
+*.csv
+*.png
