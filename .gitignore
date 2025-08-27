@@ -1,11 +1,8 @@
-pytorch_models/
-uploads/
-backend/
 *.db
 *.sqlite3
 __pycache__/
 .DS_Store
 temp_shelf_analysis/
+venv/
+.env
 *.log
-*.csv
-*.png
