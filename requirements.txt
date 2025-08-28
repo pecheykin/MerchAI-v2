@@ -5,3 +5,7 @@ torch
 torchvision
 ultralytics
 Pillow
+tensorflow
+scikit-learn
+numpy
+pandas
